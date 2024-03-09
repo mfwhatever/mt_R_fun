@@ -87,14 +87,14 @@ child_doc_add <- function(markdown,
 # function in a pipe, but code to modify a dataframe could be provided
 # as text. For example, "paste0(dataframe_name, " %>% select(column_name)")".
 
-dataframe_tab <- function(dataframe_name,
+dataframe_tab <- function(dataframe,
                           tab_text = "Data Table",
                           heading_level = 2,
                           unnumbered = TRUE,
                           unlisted = TRUE,
                           flextable_options = "",
                           flextable_extras = "",
-                          child_doc = FALSE,
+                          child_doc = TRUE,
                           new_list = FALSE,
                           # the following line fixes a strange bug
                           # (along with the opts_knit() line in the 
@@ -134,7 +134,7 @@ dataframe_tab <- function(dataframe_name,
       format(Sys.time(), "%Y%m%d%H%M%S"),
       "}\n",
       "\n\n",
-      dataframe_name,
+      deparse(substitute(dataframe)),
       " %>% standard_flextable(",
       flextable_options,
       ") ",
@@ -180,7 +180,7 @@ sql_tab <- function(query,
                     unnumbered = TRUE,
                     unlisted = TRUE,
                     connect = connect,
-                    child_doc = FALSE,
+                    child_doc = TRUE,
                     new_list = FALSE,
                     knit_dir = getwd()) {
   
@@ -297,7 +297,7 @@ tally_tab <- function (dataframe_name,
                        unnumbered = TRUE, 
                        unlisted = TRUE,
                        flextable_options = "",
-                       child_doc = FALSE,
+                       child_doc = TRUE,
                        new_list = FALSE,
                        knit_dir = getwd()) {
   
