@@ -90,6 +90,7 @@ add_data_tables <- function (
     workbook,
     worksheet_name = "Untitled",
     dataframe,
+    na.strings = na_strings(),
     # Optional list of data frame 
     # column names that need to have 
     # wrap text enabled. 
@@ -118,7 +119,8 @@ add_data_tables <- function (
 
   workbook$add_data(
     worksheet_name, 
-    dataframe
+    dataframe,
+    na.strings = na.strings
   )
   
   # First row bold

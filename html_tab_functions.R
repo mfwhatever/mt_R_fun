@@ -16,6 +16,8 @@ require(knitr)
 require(tidyverse)
 require(rlang)
 
+#### child_doc_init() ####
+
 # initialise a list for storing child doc filenames
 child_doc_init <- function (filelist = child_docs) {
   # <<- makes it a global variable
@@ -25,6 +27,8 @@ child_doc_init <- function (filelist = child_docs) {
   )
   
 }
+
+#### child_doc_add() ####
 
 # Add the child_doc markdown to a file and store the filename in the 
 # list of child_docs. 
@@ -62,7 +66,7 @@ child_doc_add <- function(markdown,
   )
 }
 
-# dataframe_tab()
+#### dataframe_tab() ####
 
 # Creates a tab with a standard flextable of a dataframe
 # flextable options is to pass arguments to standard_flextable()
@@ -94,6 +98,7 @@ dataframe_tab <- function(dataframe,
                           unlisted = TRUE,
                           flextable_options = "",
                           flextable_extras = "",
+                          flextable_save_df, # a dataframe to save the flextable
                           child_doc = TRUE,
                           new_list = FALSE,
                           # the following line fixes a strange bug
@@ -103,6 +108,36 @@ dataframe_tab <- function(dataframe,
   options(knitr.duplicate.label = "allow")
   
   opts_knit$set(output.dir = knit_dir)
+  
+  flextable_expression <- 
+      paste0(
+        stringr::str_flatten(deparse(substitute(dataframe))),
+        " %>% standard_flextable(",
+        flextable_options,
+        ") ",
+        {
+          if (stringr::str_flatten(flextable_extras) == "") {
+            paste0("")
+          } else {
+            paste0(" %>% ",
+                   paste0(flextable_extras, collapse = " %>% ")
+            )
+          }
+        }
+      )
+  
+  if (hasArg(flextable_save_df))
+  {
+    eval(
+      parse_expr(
+        paste0(
+          stringr::str_flatten(deparse(substitute(flextable_save_df))),
+          " <<- ",
+          flextable_expression
+        )
+      )
+    )
+  }
   
   knit_text = c(
     paste0(
@@ -134,19 +169,37 @@ dataframe_tab <- function(dataframe,
       format(Sys.time(), "%Y%m%d%H%M%S"),
       "}\n",
       "\n\n",
-      deparse(substitute(dataframe)),
-      " %>% standard_flextable(",
-      flextable_options,
-      ") ",
-      {
-        if (flextable_extras == "") {
-          paste0("")
-        } else {
-          paste0(" %>% ",
-                 paste0(flextable_extras, collapse = " %>% ")
-          )
-        }
-      },
+      # {
+      #   if (hasArg(flextable_save_df))
+      #    {
+      #     paste0(
+      #       stringr::str_flatten(deparse(substitute(flextable_save_df))),
+      #       " <- "
+      #     )
+      #   } 
+      # },
+      # stringr::str_flatten(deparse(substitute(dataframe))),
+      # " %>% standard_flextable(",
+      # flextable_options,
+      # ") ",
+      # {
+      #   if (stringr::str_flatten(flextable_extras) == "") {
+      #     paste0("")
+      #   } else {
+      #     paste0(" %>% ",
+      #            paste0(flextable_extras, collapse = " %>% ")
+      #     )
+      #   }
+      # },
+      # "\n\n",
+      # {
+      #   if (hasArg(flextable_save_df)) {
+      #     paste0(
+      #       stringr::str_flatten(deparse(substitute(flextable_save_df)))
+      #     )
+      #   }
+      # },
+      flextable_expression,
       "\n\n",
       "```",
       "\n\n"
@@ -168,8 +221,8 @@ dataframe_tab <- function(dataframe,
   }
 }
 
-# sql_tab()
-
+#### sql_tab() ####
+ 
 # Creates a tab with a formatted SQL query
   # Tested with queries created with glue::glue_sql().
   # May not work with queries created some other way.
@@ -182,7 +235,17 @@ sql_tab <- function(query,
                     connect = connect,
                     child_doc = TRUE,
                     new_list = FALSE,
-                    knit_dir = getwd()) {
+                    knit_dir = getwd(),
+                    # sqlparseR::sql_format()
+                    # parameters
+                    sql_format_params = list(
+                      reindent = TRUE,
+                      use_space_around_operators = TRUE,
+                      wrap_after = 40, 
+                      indent_after_first = TRUE,
+                      strip_comments = FALSE
+                      )
+                    ){
   
   options(knitr.duplicate.label = "allow")
     # the following line fixes a strange bug
@@ -219,12 +282,15 @@ sql_tab <- function(query,
       format(Sys.time(), "%Y%m%d%H%M%S"),
       ", eval = FALSE, class.source = 'fold-show', ",
       "code = sqlparseR::sql_format(",
-      substitute(query),
-      ", reindent = TRUE, ",
-      "use_space_around_operators = TRUE, ",
-      "wrap_after = 40, ",
-      "indent_after_first = TRUE, ",
-      "strip_comments = FALSE) %>% ",
+      paste0("\"", query, "\"", collapse = ""),
+      ", ",
+      paste(
+        names(sql_format_params), 
+        " = ", 
+        sql_format_params,
+        collapse = ", "
+        ),
+      ") %>% ",
       # These lines are to clean up the rendering of SQL comments.
       # sqlparseR generally does a good job, but it doesn't always
       # manage to put comments on their own line. This code ensures
@@ -253,10 +319,12 @@ sql_tab <- function(query,
       # Line 3 replaces any double line breaks with a single one.
       
       # The output of cat for line 3 is:
-      #   str_replace_all("\\\n\\\n", "\\\n")
+      #   str_replace_all("\\\n *?\\\n", "\\\n")
       # i.e., find all instances of "\n\n" and replace with "\n"
+      # " *?" means that there can be any number of spaces between
+      # the two \n.
       
-      "str_replace_all(\"\\\\\\n\\\\\\n\", \"\\\\\\n\"), ",
+      "str_replace_all(\"\\\\\\n *?\\\\\\n\", \"\\\\\\n\"), ",
       "connection = connect}\n\n",
       "```\n\n"
     )
@@ -276,9 +344,89 @@ sql_tab <- function(query,
   }
 }
 
+#### plot_tab() ####
+
+# Creates a tab with a formatted SQL query
+# Tested with queries created with glue::glue_sql().
+# May not work with queries created some other way.
+
+plot_tab <- function(plot_obj,
+                    tab_text = "Plot",
+                    figure_caption,
+                    heading_level = 2,
+                    unnumbered = TRUE,
+                    unlisted = TRUE,
+                    child_doc = TRUE,
+                    new_list = FALSE,
+                    knit_dir = getwd()) {
+  
+  options(knitr.duplicate.label = "allow")
+  # the following line fixes a strange bug
+  opts_knit$set(output.dir = knit_dir)
+  
+  # create a heading and place the plot
+  knit_text = c(
+    paste0(
+      paste0(rep("#", heading_level), collapse = ""),
+      " ",
+      tab_text,
+      if (!(unnumbered == F &
+            unlisted == F)) {
+        paste0(" {",
+               if (unnumbered == T & 
+                   unlisted == T) {
+                 paste0(".unnumbered .unlisted")
+               } else if (unnumbered == T) {
+                 paste0(".unnumbered")
+               } else if (unlisted == T) {
+                 paste0(".unlisted")
+               } else {paste0("")},
+               " }",
+               collapse = ""
+        )
+      } else {
+        paste0("")
+      },
+      "\n\n",
+      " \n",
+      "```{R plot-",
+      # chunk labels need to be unique, so we will
+      # append the current datetime
+      format(Sys.time(), "%Y%m%d%H%M%S"),
+      if (hasArg(figure_caption)){
+        paste0(
+          ", ",
+          "fig.cap = '",
+          "**",
+          figure_caption,
+          "**",
+          "'",
+          ", ",
+          "fig.align = 'center'"
+        )
+      },
+      "}\n\n",
+      deparse(substitute(plot_obj)), "  \n",
+      "```\n<br>\n"
+    )
+  )
+  
+  if (!child_doc) {
+    cat(
+      knitr::knit_child(
+        text = knit_text,
+        quiet = TRUE)
+    ) 
+  } else {
+    child_doc_add(
+      knit_text,
+      new_list = new_list
+    )  
+  }
+}
 
 
-#### tally_tab()   
+#### tally_tab() ####
 
 # Creates a tab with a flextable of a dataframe
 # where the columns have been grouped by grouping_columns

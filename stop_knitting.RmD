@@ -1,0 +1,13 @@
+---
+title: "Stop Knitting Chunk"
+output: html_document
+---
+
+```{r, stop_knitting}
+
+#DBI::dbDisconnect(connect) # Close the connection
+knit_exit()
+
+```
+
+
