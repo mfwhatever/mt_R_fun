@@ -143,31 +143,11 @@ add_data_tables <- function (
   workbook$set_col_widths(
     worksheet_name, 
     cols = 1:length(names(dataframe)),
-    widths = (
-      # col_to_df is a private function that converts an xml list of 
-      # column width parameters to a dataframe
-      openxlsx2:::col_to_df(
-        # Here we extract the column attributes from the current
-        # worksheet's xml structure. To access the right worksheet,
-        # we need to know its index. There is no public function for that, 
-        # so we need to delve into the bowels of the workbook environment
-        # to access get_sheet_index(). We use that index to reference the
-        # current worksheet (workbook$worksheets[[]]) and then within that
-        # worksheet object the column attributes are stored in cols_attr.
-        openxlsx2::read_xml(
-          workbook$worksheets[[
-            workbook$.__enclos_env__$private$get_sheet_index(worksheet_name)
-            ]]$cols_attr)) %>% 
-        # Now we have a dataframe of the column attributes, we can scale the
-        # values in the width column by our width_factor. They are stored
-        # as text, so we convert to numeric, scale, and then convert back
-        # to text
-        mutate(width = as.character(
-          as.numeric(width) * (1 + width_factor/100))
-          )
-      # We have a dataframe with the updated widths. Now we just
-      # subset on the width column to obtain a vector of column widths
-      )$width
+    widths = as.character(
+      as.numeric(
+        workbook$worksheets[[
+          workbook$.__enclos_env__$private$get_sheet_index(worksheet_name)
+        ]]$unfold_cols()$width) * (1 + width_factor/100))
   )
   
   # Wrap text and override column width for selected columns

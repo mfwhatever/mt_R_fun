@@ -21,7 +21,8 @@ require(rlang)
 # initialise a list for storing child doc filenames
 child_doc_init <- function (filelist = child_docs) {
   # <<- makes it a global variable
-  assign(deparse(substitute(filelist)),
+  assign(deparse(substitute(filelist),
+                 backtick = TRUE),
          list(),
          envir = globalenv()
   )
@@ -36,7 +37,8 @@ child_doc_add <- function(markdown,
                           filelist = child_docs,
                           new_list = FALSE) {
 
-  if(!exists(deparse(substitute(filelist))) |
+  if(!exists(deparse(substitute(filelist),
+                     backtick = TRUE)) |
      new_list) {
     child_doc_init()
     # cat("Child-doc filelist created\n\n")
@@ -52,7 +54,8 @@ child_doc_add <- function(markdown,
     ".RmD"
   )
   
-  assign(deparse(substitute(filelist)),
+  assign(deparse(substitute(filelist),
+                 backtick = TRUE),
          append(
            filelist, 
            child_doc_filename),
@@ -111,7 +114,9 @@ dataframe_tab <- function(dataframe,
   
   flextable_expression <- 
       paste0(
-        stringr::str_flatten(deparse(substitute(dataframe))),
+        stringr::str_flatten(deparse(substitute(dataframe),
+                                     backtick = TRUE)
+                             ),
         " %>% standard_flextable(",
         flextable_options,
         ") ",
@@ -131,7 +136,8 @@ dataframe_tab <- function(dataframe,
     eval(
       parse_expr(
         paste0(
-          stringr::str_flatten(deparse(substitute(flextable_save_df))),
+          stringr::str_flatten(deparse(substitute(flextable_save_df),
+                                       backtick = TRUE)),
           " <<- ",
           flextable_expression
         )
@@ -406,7 +412,8 @@ plot_tab <- function(plot_obj,
         )
       },
       "}\n\n",
-      deparse(substitute(plot_obj)), "  \n",
+      deparse(substitute(plot_obj),
+              backtick = TRUE), "  \n",
       "```\n<br>\n"
     )
   )
