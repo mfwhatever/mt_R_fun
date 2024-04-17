@@ -89,10 +89,6 @@ child_doc_add <- function(markdown,
 #                       i = ~ STDUCC == 'Y', part = 'body')"        
 #       )
 
-# dataframe_name is a text string corresponding to the name of the
-# dataframe in the Global Environment. It is not possible to use the
-# function in a pipe, but code to modify a dataframe could be provided
-# as text. For example, "paste0(dataframe_name, " %>% select(column_name)")".
 
 dataframe_tab <- function(dataframe,
                           tab_text = "Data Table",
