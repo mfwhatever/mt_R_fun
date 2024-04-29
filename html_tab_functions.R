@@ -238,6 +238,13 @@ sql_tab <- function(query,
                     child_doc = TRUE,
                     new_list = FALSE,
                     knit_dir = getwd(),
+                    # Normally, the SQL code is sent as text.
+                    # When it is very long, this causes errors.
+                    # Set use_object_name = T to use the environment
+                    # object name instead (e.g., "query").
+                    # Note that the object name will need to be in
+                    # quotes
+                    use_object_name = F,
                     # sqlparseR::sql_format()
                     # parameters
                     sql_format_params = list(
@@ -284,7 +291,15 @@ sql_tab <- function(query,
       format(Sys.time(), "%Y%m%d%H%M%S"),
       ", eval = FALSE, class.source = 'fold-show', ",
       "code = sqlparseR::sql_format(",
-      paste0("\"", query, "\"", collapse = ""),
+      # check if the text string in query matches an object
+      # if so, we will treat it as an object, otherwise as a text string
+      {
+        if(use_object_name){
+          paste0(query)
+        } else {
+          paste0("\"", query, "\"", collapse = "")
+        }
+      },
       ", ",
       paste(
         names(sql_format_params), 

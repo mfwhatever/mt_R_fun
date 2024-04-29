@@ -2,16 +2,6 @@ require(RODBC)
 require(keyring)
 require(rstudioapi)
 
-# Close any connection that is already open
-if (exists("connect")) {
-  # note that odbcValidChannel() is an internal function
-  # (which is why ::: is needed to access it).
-  # There is no guarantee that this function will be accessible in
-  # future versions of RODBC (current version 1.3-23)
-  if (RODBC:::odbcValidChannel("channel")) {
-    odbcClose("connect")
-  }
-}
 
 # Check if a username/password is already stored.
 # On Windows, by default, the value will be stored
