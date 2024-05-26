@@ -14,24 +14,37 @@ standard_flextable <-
            font_size = get_flextable_defaults()$font.size,
            # Make a vertical scroll bar for long tables.
            # In pixels. 400 recommended.
-           scroll_height = 400) {
-    if(exists("table_header_colour", where = params)) {
+           scroll_height = 400,
+           # By default, flextable will include all the
+           # dataframe columns. Provide a character vector
+           # of columns to include to override that. Columns that 
+           # are not included will be "hidden", and can still be used
+           # in formulas (e.g., highlighting rows).
+           # Recommend using names(df) and discard() for the unneeded columns.
+           table_columns = NULL) {
+    
+    if(exists(params) & exists("table_header_colour", where = params)) {
       table_header_colour <- params$table_header_colour
     } else {
       table_header_colour <- "gray90"
     }
     
-    if(exists("table_header_font_colour", where = params)) {
+    if(exists(params) & exists("table_header_font_colour", where = params)) {
       table_header_font_colour <- params$table_header_font_colour
     } else {
       table_header_font_colour <- "black"
     }    
     
+    if(is.null(table_columns)){
+      flextable_colkeys <- names(df)
+    } else {
+      flextable_colkeys <- table_columns
+    }
     
     
-    return(
+    return(  
       df %>%
-        flextable() %>%
+        flextable(col_keys = flextable_colkeys) %>%
         fontsize(size = font_size, part = "all") %>%
         autofit() %>%
         # Change the header background colour.
