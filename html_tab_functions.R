@@ -167,8 +167,8 @@ dataframe_tab <- function(dataframe,
       " \n",
       "```{r datatable-",
       # chunk labels need to be unique, so we will
-      # append the current datetime
-      format(Sys.time(), "%Y%m%d%H%M%S"),
+      # append the current datetime with seconds to 3 decimal places
+      format(Sys.time(), "%Y%m%d%H%M%OS3"),
       "}\n",
       "\n\n",
       # {
@@ -287,8 +287,8 @@ sql_tab <- function(query,
       " \n",
       "```{glue_sql check-query-",
       # chunk labels need to be unique, so we will
-      # append the current datetime
-      format(Sys.time(), "%Y%m%d%H%M%S"),
+      # append the current datetime, with seconds to 3 decimal places
+      format(Sys.time(), "%Y%m%d%H%M%OS3"),
       ", eval = FALSE, class.source = 'fold-show', ",
       "code = sqlparseR::sql_format(",
       # check if the text string in query matches an object
@@ -408,8 +408,8 @@ plot_tab <- function(plot_obj,
       " \n",
       "```{R plot-",
       # chunk labels need to be unique, so we will
-      # append the current datetime
-      format(Sys.time(), "%Y%m%d%H%M%S"),
+      # append the current datetime with seconds to 3 decimal placesOS3
+      format(Sys.time(), "%Y%m%d%H%M%OS3"),
       if (hasArg(figure_caption)){
         paste0(
           ", ",
@@ -498,8 +498,8 @@ tally_tab <- function (dataframe_name,
       " \n",
       "```{r tally-",
       # chunk labels need to be unique, so we will
-      # append the current datetime
-      format(Sys.time(), "%Y%m%d%H%M%S"),
+      # append the current datetime with seconds to 3 decimal places
+      format(Sys.time(), "%Y%m%d%H%M%OS3"),
       "}\n",
       "\n\n",
       dataframe_name,
