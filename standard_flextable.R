@@ -23,18 +23,25 @@ standard_flextable <-
            # Recommend using names(df) and discard() for the unneeded columns.
            table_columns = NULL) {
     
-    if(exists(params) & exists("table_header_colour", where = params)) {
-      table_header_colour <- params$table_header_colour
+    if(exists("params")) {
+      if(exists("table_header_colour", where = params)) {
+        table_header_colour <- params$table_header_colour
+      } else {
+        table_header_colour <- "gray90"
+      }
     } else {
       table_header_colour <- "gray90"
     }
     
-    if(exists(params) & exists("table_header_font_colour", where = params)) {
-      table_header_font_colour <- params$table_header_font_colour
+    if(exists("params")){
+      if(exists("table_header_font_colour", where = params)) {
+        table_header_font_colour <- params$table_header_font_colour
+      } else {
+        table_header_font_colour <- "black"
+      }  
     } else {
       table_header_font_colour <- "black"
-    }    
-    
+    }         
     if(is.null(table_columns)){
       flextable_colkeys <- names(df)
     } else {
@@ -52,18 +59,20 @@ standard_flextable <-
         # and the font colour
         color(color = table_header_font_colour, part = "header") %>%
         {
-          if(exists("table_border_colour", where = params)) {
-            # Set the borders only if table border colour is specified
-            border_outer(
-              border = fp_border(color = table_border_colour, style = "solid")
-            ) %>%
-              border_inner(
+          if(exists("params")) {
+            if(exists("table_border_colour", where = params)) {
+              # Set the borders only if table border colour is specified
+              border_outer(
                 border = fp_border(color = table_border_colour, style = "solid")
               ) %>%
-              border_inner(
-                border = fp_border(color = "black", style = "solid"), 
-                part = "header"
-              )
+                border_inner(
+                  border = fp_border(color = table_border_colour, style = "solid")
+                ) %>%
+                border_inner(
+                  border = fp_border(color = "black", style = "solid"), 
+                  part = "header"
+                )
+            } else {.}
           } else {.}
         } %>%
         # Centre the header cells.
