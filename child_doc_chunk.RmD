@@ -1,0 +1,9 @@
+---
+title: "Child Doc Chunk"
+output: html_document
+---
+
+```{r, child = if(length(child_docs) == 1) {child_docs[[1]]} else {child_docs}}
+```
+
+
