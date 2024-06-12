@@ -6,11 +6,12 @@
 
 # Assumes that standard_flextable() is available in the RmD.
 
-# If a path to a child doc is specified, cat will write (append) to that
-# file. Otherwise, the knitted document will be inserted directly into
-# the document. It is recommended to make a variable for the 
-# child document before calling the function. 
-# e.g., child <- paste0(tempdir(),"/child.Rmd")
+# If child_doc = T, cat will write to a temporary child document
+# Otherwise, the knitted document will be inserted directly into
+# the document. Note that the chunk options need to include 
+# results = 'asis' for this to work.
+
+
 
 require(knitr)
 require(tidyverse)
