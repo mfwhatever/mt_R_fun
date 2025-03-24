@@ -16,6 +16,9 @@
 require(knitr)
 require(tidyverse)
 require(rlang)
+require(glue)
+require(ggplot2)
+
 
 #### child_doc_init() ####
 
@@ -49,7 +52,8 @@ child_doc_add <- function(markdown,
   child_doc_filename <- paste0(
     tempdir(),
     "/",
-    "child_doc",
+    deparse(substitute(filelist),
+            backtick = TRUE),
     "_",
     length(filelist) + 1,
     ".RmD"
@@ -165,12 +169,11 @@ dataframe_tab <- function(dataframe,
         paste0("")
       },
       "\n\n",
-      " \n",
       "```{r datatable-",
       # chunk labels need to be unique, so we will
       # append the current datetime with seconds to 3 decimal places
       format(Sys.time(), "%Y%m%d%H%M%OS3"),
-      "}\n",
+      "}",
       "\n\n",
       # {
       #   if (hasArg(flextable_save_df))
@@ -285,7 +288,6 @@ sql_tab <- function(query,
         paste0("")
       },
       "\n\n",
-      " \n",
       "```{glue_sql check-query-",
       # chunk labels need to be unique, so we will
       # append the current datetime, with seconds to 3 decimal places
@@ -343,8 +345,10 @@ sql_tab <- function(query,
       # the two \n.
       
       "str_replace_all(\"\\\\\\n *?\\\\\\n\", \"\\\\\\n\"), ",
-      "connection = connect}\n\n",
-      "```\n\n"
+      "connection = connect}",
+      "\n\n",
+      "```",
+      "\n\n"
     )
   )
   
@@ -364,19 +368,17 @@ sql_tab <- function(query,
 
 #### plot_tab() ####
 
-# Creates a tab with a formatted SQL query
-# Tested with queries created with glue::glue_sql().
-# May not work with queries created some other way.
+# Creates a tab containing the plot object (plot_obj) provided as argument
 
 plot_tab <- function(plot_obj,
-                    tab_text = "Plot",
-                    figure_caption,
-                    heading_level = 2,
-                    unnumbered = TRUE,
-                    unlisted = TRUE,
-                    child_doc = TRUE,
-                    new_list = FALSE,
-                    knit_dir = getwd()) {
+                     tab_text = "Plot",
+                     figure_caption,
+                     heading_level = 2,
+                     unnumbered = TRUE,
+                     unlisted = TRUE,
+                     child_doc = TRUE,
+                     new_list = FALSE,
+                     knit_dir = getwd()) {
   
   options(knitr.duplicate.label = "allow")
   # the following line fixes a strange bug
@@ -406,27 +408,97 @@ plot_tab <- function(plot_obj,
         paste0("")
       },
       "\n\n",
-      " \n",
       "```{R plot-",
       # chunk labels need to be unique, so we will
       # append the current datetime with seconds to 3 decimal placesOS3
       format(Sys.time(), "%Y%m%d%H%M%OS3"),
-      if (hasArg(figure_caption)){
-        paste0(
-          ", ",
-          "fig.cap = '",
-          "**",
-          figure_caption,
-          "**",
-          "'",
-          ", ",
-          "fig.align = 'center'"
-        )
+      if (hasArg(figure_caption)) {
+        glue(", fig.cap = '**{figure_caption}**', fig.align='center'")
       },
-      "}\n\n",
-      deparse(substitute(plot_obj),
-              backtick = TRUE), "  \n",
-      "```\n<br>\n"
+      "}",
+      "\n\n",
+      "library(ggplot2)",
+      "\n",
+      deparse1(substitute(plot_obj), backtick = TRUE, collapse = ""),
+      "\n\n",
+      "```",
+      "\n\n"
+    )
+  )
+
+  if (!child_doc) {
+    cat(
+      knitr::knit_child(
+        text = knit_text,
+        quiet = TRUE)
+    ) 
+  } else {
+    child_doc_add(
+      knit_text,
+      new_list = new_list
+    )  
+  }
+}
+
+#### plot_tab2() ####
+
+# Creates a tab with a plot generated from a plotting function (plot_fn) using
+# the required inputs (plot_fn_args), both provided as argument
+
+plot_tab2 <- function(plot_fn,  # function to generate plot object / plot code
+                      plot_fn_args,  # arguments of plot_fn in list format
+                      tab_text = "Plot",
+                      figure_caption,
+                      heading_level = 2,
+                      unnumbered = TRUE,
+                      unlisted = TRUE,
+                      child_doc = TRUE,
+                      new_list = FALSE,
+                      knit_dir = getwd()) {
+  
+  options(knitr.duplicate.label = "allow")
+  # the following line fixes a strange bug
+  opts_knit$set(output.dir = knit_dir)
+  
+  # create a heading and place the plot
+  knit_text = c(
+    paste0(
+      paste0(rep("#", heading_level), collapse = ""),
+      " ",
+      tab_text,
+      if (!(unnumbered == F &
+            unlisted == F)) {
+        paste0(" {",
+               if (unnumbered == T & 
+                   unlisted == T) {
+                 paste0(".unnumbered .unlisted")
+               } else if (unnumbered == T) {
+                 paste0(".unnumbered")
+               } else if (unlisted == T) {
+                 paste0(".unlisted")
+               } else {paste0("")},
+               " }",
+               collapse = ""
+        )
+      } else {
+        paste0("")
+      },
+      "\n\n",
+      "```{R plot-",
+      # chunk labels need to be unique, so we will
+      # append the current datetime with seconds to 3 decimal placesOS3
+      format(Sys.time(), "%Y%m%d%H%M%OS3"),
+      if (hasArg(figure_caption)) {
+        glue(", fig.cap = '**{figure_caption}**', fig.align='center'")
+      },
+      ", cache=TRUE}",
+      "\n\n",
+      "library(ggplot2)",
+      "\n",
+      do.call(plot_fn, plot_fn_args),
+      "\n\n",
+      "```",
+      "\n\n"
     )
   )
   
@@ -496,24 +568,23 @@ tally_tab <- function (dataframe_name,
         paste0("")
       },
       "\n\n",
-      " \n",
       "```{r tally-",
       # chunk labels need to be unique, so we will
       # append the current datetime with seconds to 3 decimal places
       format(Sys.time(), "%Y%m%d%H%M%OS3"),
-      "}\n",
+      "}",
       "\n\n",
       dataframe_name,
       " %>%",
-      "\n\n",
+      "\n",
       "group_by(",
       paste0(grouping_columns, collapse = ", "),
       ") %>%",
-      "\n\n",
+      "\n",
       "tally() %>% select(n, everything()) %>% ",
-      "\n\n",
+      "\n",
       "arrange(desc(n)) %>%",
-      "\n\n",
+      "\n",
       "standard_flextable(",
       flextable_options,
       ")",
