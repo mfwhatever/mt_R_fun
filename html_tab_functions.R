@@ -516,6 +516,77 @@ plot_tab2 <- function(plot_fn,  # function to generate plot object / plot code
   }
 }
 
+#### plot_tab3() ####
+
+# Creates a tab with a plot imported from a saved image file, e.g. png
+
+plot_tab3 <- function(plot_dir,  # directory path to saved plot image
+                      tab_text = "Plot",
+                      figure_caption,
+                      heading_level = 2,
+                      unnumbered = TRUE,
+                      unlisted = TRUE,
+                      child_doc = TRUE,
+                      new_list = FALSE,
+                      knit_dir = getwd()) {
+  
+  options(knitr.duplicate.label = "allow")
+  # the following line fixes a strange bug
+  opts_knit$set(output.dir = knit_dir)
+  
+  # create a heading and place the plot
+  knit_text = c(
+    paste0(
+      paste0(rep("#", heading_level), collapse = ""),
+      " ",
+      tab_text,
+      if (!(unnumbered == F &
+            unlisted == F)) {
+        paste0(" {",
+               if (unnumbered == T & 
+                   unlisted == T) {
+                 paste0(".unnumbered .unlisted")
+               } else if (unnumbered == T) {
+                 paste0(".unnumbered")
+               } else if (unlisted == T) {
+                 paste0(".unlisted")
+               } else {paste0("")},
+               " }",
+               collapse = ""
+        )
+      } else {
+        paste0("")
+      },
+      "\n\n",
+      "```{R plot-",
+      # chunk labels need to be unique, so we will
+      # append the current datetime with seconds to 3 decimal placesOS3
+      format(Sys.time(), "%Y%m%d%H%M%OS3"),
+      if (hasArg(figure_caption)) {
+        glue(", fig.cap = '**{figure_caption}**', fig.align='center'")
+      },
+      ", cache=TRUE}",
+      "\n\n",
+      glue("knitr::include_graphics('{plot_dir}')"),
+      "\n\n",
+      "```",
+      "\n\n"
+    )
+  )
+  
+  if (!child_doc) {
+    cat(
+      knitr::knit_child(
+        text = knit_text,
+        quiet = TRUE)
+    ) 
+  } else {
+    child_doc_add(
+      knit_text,
+      new_list = new_list
+    )  
+  }
+}
 
 #### tally_tab() ####
 
